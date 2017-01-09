@@ -142,7 +142,7 @@ class AzureAgent(BaseAgent):
   # (Takes longer than the creation time for other resources.)
   MAX_VM_CREATION_TIME = 240
 
-  # The maximum number of seconds to wait for an Azure Scale Set to be created.
+  # The maximum number of seconds to wait for an Azure scale set to be created.
   MAX_VMSS_WAIT_TIME = 300
 
   # The maximum limit of allowable VMs within a scale set.
@@ -305,8 +305,8 @@ class AzureAgent(BaseAgent):
     subnet = self.create_virtual_network(network_client, parameters,
                                          virtual_network, virtual_network)
     vm_network_name = Haikunator().haikunate()
-    self.create_network_interface(network_client, vm_network_name, vm_network_name,
-                                  subnet, parameters)
+    self.create_network_interface(network_client, vm_network_name,
+                                  vm_network_name,subnet, parameters)
     network_interface = network_client.network_interfaces.get(
       resource_group, vm_network_name)
     self.create_virtual_machine(credentials, network_client,
@@ -401,7 +401,7 @@ class AzureAgent(BaseAgent):
     return linux_config
 
   def create_or_update_vm_scale_sets(self, count, parameters, subnet):
-    """ Creates/Updates  a Virtual Machine Scale Set containing the given number
+    """ Creates/Updates  a virtual machine scale set containing the given number
     of virtual machines with the virtual network provided.
     Args:
         count: The number of virtual machines to be created in the scale set.
@@ -546,7 +546,7 @@ class AzureAgent(BaseAgent):
     for x in threads:
       x.join()
 
-    # Delete the Virtual Machine Scale Sets created.
+    # Delete the virtual machine scale sets created.
     vmss_list = compute_client.virtual_machine_scale_sets.list(resource_group)
     vmss_delete_threads = []
     for vmss in vmss_list:
@@ -559,14 +559,14 @@ class AzureAgent(BaseAgent):
       x.join()
 
   def delete_virtual_machine_scale_set(self, compute_client, resource_group,
-                                        verbose, scale_set_name):
+                                       verbose, scale_set_name):
     """ Deletes the virtual machine scale set created from the specified
     resource group.
     Args:
         compute_client: An instance of the Compute Management client.
-      resource_group: The resource group name to use for this deployment.
-      verbose: A boolean indicating whether or not the verbose mode is on.
-      scale_set_name: The name of the virtual machine scale set to be deleted.
+        resource_group: The resource group name to use for this deployment.
+        verbose: A boolean indicating whether or not the verbose mode is on.
+        scale_set_name: The name of the virtual machine scale set to be deleted.
     """
     AppScaleLogger.verbose("Deleting Scale Set {}".format(scale_set_name), verbose)
     delete_response = compute_client.virtual_machine_scale_sets.delete(
