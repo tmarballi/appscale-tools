@@ -317,8 +317,8 @@ class AzureAgent(BaseAgent):
       lb_vms_threads = []
       for _ in range(count):
         thread = threading.Thread(target=self.setup_virtual_machine_creation,
-                                  args=(credentials, network_client, parameters,
-                                        resource_group, subnet))
+                                  args=(credentials, network_client,
+                                        parameters, subnet))
         thread.start()
         lb_vms_threads.append(thread)
 
