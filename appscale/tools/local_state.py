@@ -366,8 +366,8 @@ class LocalState(object):
           uniquely identifies this AppScale deployment.
     """
     file_path = cls.LOCAL_APPSCALE_PATH + keyname + "*"
-    for file in glob.glob(file_path):
-      os.remove(file)
+    for keyname_file in glob.glob(file_path):
+      os.remove(keyname_file)
 
   @classmethod
   def update_local_metadata(cls, options, db_master, head_node):
