@@ -545,7 +545,7 @@ Available commands:
     AppScaleTools.print_cluster_status(options)
 
 
-  def deploy(self, app, email=None):
+  def deploy(self, app, project_id, email=None):
     """ 'deploy' is a more accessible way to tell an AppScale deployment to run a
     Google App Engine application than 'appscale-upload-app'. It calls that
     command with the configuration options found in the AppScalefile in the
@@ -582,8 +582,9 @@ Available commands:
       command.append(email)
 
     command.append("--file")
-    command.append("--project-id")
     command.append(app)
+    command.append("--project-id")
+    command.append(project_id)
 
     # Finally, exec the command. Don't worry about validating it -
     # appscale-upload-app will do that for us.

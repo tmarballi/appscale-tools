@@ -82,7 +82,7 @@ def main():
       if len(sys.argv) == 3:
         appscale.deploy(sys.argv[2])
       else:
-        appscale.deploy(sys.argv[2], sys.argv[3])
+        appscale.deploy(sys.argv[2], sys.argv[4], sys.argv[5])
     except Exception as exception:
       LocalState.generate_crash_log(exception, traceback.format_exc())
       sys.exit(1)
