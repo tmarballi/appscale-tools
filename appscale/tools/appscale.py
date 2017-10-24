@@ -582,6 +582,7 @@ Available commands:
       command.append(email)
 
     command.append("--file")
+    command.append("--project-id")
     command.append(app)
 
     # Finally, exec the command. Don't worry about validating it -

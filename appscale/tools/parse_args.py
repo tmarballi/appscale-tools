@@ -338,6 +338,8 @@ class ParseArgs(object):
       self.parser.add_argument('--keyname', '-k',
         default=self.DEFAULT_KEYNAME,
         help="the keypair name to use")
+      self.parser.add_argument('--project-id',
+        help="the name of the application to upload")
       self.parser.add_argument('--test', action='store_true',
         default=False,
         help="avoids prompting for user input")
