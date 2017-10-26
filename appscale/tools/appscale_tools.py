@@ -954,7 +954,7 @@ class AppScaleTools(object):
       # Java App Engine users may have specified their war directory. In that
       # case, just move up one level, back to the app's directory.
       file_location = file_location + os.sep + ".."
-      app_id = AppEngineHelper.get_app_id_from_app_config(file_location)
+      app_id = options.project_id
 
     # Let users know that versions are not supported yet.
     AppEngineHelper.warn_if_version_defined(file_location, options.test)
