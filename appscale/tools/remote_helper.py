@@ -1026,7 +1026,7 @@ class RemoteHelper(object):
 
 
   @classmethod
-  def copy_app_to_host(cls, app_location, keyname, is_verbose, extras=None):
+  def copy_app_to_host(cls, app_location, keyname, is_verbose, app_id, extras=None):
     """Copies the given application to a machine running the Login service
     within an AppScale deployment.
 
@@ -1043,7 +1043,7 @@ class RemoteHelper(object):
       A str corresponding to the location on the remote filesystem where the
         application was copied to.
     """
-    app_id = AppEngineHelper.get_app_id_from_app_config(app_location)
+    #app_id = AppEngineHelper.get_app_id_from_app_config(app_location)
 
     AppScaleLogger.log("Tarring application")
     rand = str(uuid.uuid4()).replace('-', '')[:8]
