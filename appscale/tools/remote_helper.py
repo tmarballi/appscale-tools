@@ -151,10 +151,6 @@ class RemoteHelper(object):
 
     agent.configure_instance_security(params)
 
-    for _, node in enumerate(node_layout.nodes):
-      if node.is_role('compute') and not options.instance_type:
-        options.instance_type = node.instance_type
-
     load_balancer_nodes = node_layout.get_nodes('load_balancer', True)
     instance_ids, public_ips, private_ips = cls.spawn_load_balancers_in_cloud(
       options, agent, params,
