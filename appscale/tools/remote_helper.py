@@ -157,10 +157,10 @@ class RemoteHelper(object):
 
     instance_type_roles = {'with_disks':{}, 'without_disks': {}}
 
-    for _, node in enumerate(node_layout.nodes):
-      AppScaleLogger.warn("NODE LAYOUT {}".format(node))
-      if 'compute' in node.roles and not options.instance_type:
-        options.instance_type = node.instance_type
+    #for _, node in enumerate(node_layout.nodes):
+    #  AppScaleLogger.warn("NODE LAYOUT {}".format(node))
+    #  if 'compute' in node.roles and not options.instance_type:
+    #    options.instance_type = node.instance_type
 
     for node in node_layout.get_nodes('load_balancer', True):
       load_balancer_roles.setdefault(node.instance_type, []).append(node)
