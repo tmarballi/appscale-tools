@@ -153,10 +153,6 @@ class RemoteHelper(object):
 
     agent.configure_instance_security(params)
 
-    for _, node in enumerate(node_layout.nodes):
-      if node.is_role('compute') and not options.instance_type:
-        options.instance_type = node.instance_type
-
     load_balancer_roles = {}
 
     instance_type_roles = {'with_disks':{}, 'without_disks': {}}
