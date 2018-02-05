@@ -154,6 +154,7 @@ class RemoteHelper(object):
     agent.configure_instance_security(params)
 
     for _, node in enumerate(node_layout.nodes):
+      AppScaleLogger.warn("NODE LAYOUT {}".format(node))
       if node.is_role('compute') and not options.instance_type:
         options.instance_type = node.instance_type
 
@@ -171,11 +172,13 @@ class RemoteHelper(object):
 
     spawned_instance_ids = []
 
+    AppScaleLogger.warn("PARAMETERS {}".format(params))
     for instance_type, load_balancer_nodes in load_balancer_roles.items():
       # Copy parameters so we can modify the instance type.
       instance_type_params = params.copy()
       instance_type_params['instance_type'] = instance_type
 
+      AppScaleLogger.warn("BEFORE SPAWN PARAMETERS {}".format(instance_type_params))
       instance_ids, public_ips, private_ips = cls.spawn_nodes_in_cloud(
         options, agent, instance_type_params, spawned_instance_ids,
         count=len(load_balancer_nodes), load_balancer=True)
@@ -341,6 +344,7 @@ class RemoteHelper(object):
         that was started.
     """
     try:
+      AppScaleLogger.warn("IN PROCESS SPAWN PARAMETERS {}".format(params))
       instance_ids, public_ips, private_ips = agent.run_instances(
         count=count, parameters=params, security_configured=True,
         public_ip_needed=load_balancer)
