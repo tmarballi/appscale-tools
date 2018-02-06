@@ -552,13 +552,13 @@ class AzureAgent(BaseAgent):
     """
     verbose = parameters[self.PARAM_VERBOSE]
     random_resource_name = Haikunator().haikunate()
-
     num_instances_to_add = count
 
     # While autoscaling, look through existing scale sets to check if they have
     # capacity to hold more vms. If they do, update the scale sets with additional
     # vms. If not, then create a new scale set for them.
     is_autoscale = parameters['autoscale_agent']
+    AppScaleLogger.warn("PARAMETERS TO BE DISPLAYED {}".format(parameters))
     if is_autoscale in ['True', True]:
       instances_added = self.add_instances_to_existing_ss(
         num_instances_to_add, parameters)
