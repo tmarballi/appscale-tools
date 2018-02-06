@@ -166,6 +166,10 @@ class NodeLayout():
       self.invalid("IP: {} does not match ip or node-id formats.".format(
         ip_address))
 
+  def print_nodes(self, nodes):
+    for node in nodes:
+      AppScaleLogger.warn("NODE INSTANCE TYPE {}".format(node.instance_type))
+
   def validate_node_layout(self):
     """Checks to see if this NodeLayout represents an acceptable (new) advanced
     deployment strategy, and if so, constructs self.nodes from it.
@@ -214,6 +218,7 @@ class NodeLayout():
     login_found = False
     # Loop through the list of "node sets", which are grouped by role.
     for node_set in self.input_yaml:
+      AppScaleLogger.warn("NODE SET IN VALIDATE LAYOUT: {}".format(node_set))
       # If the key nodes is mapped to an integer it should be a cloud
       # deployment so we will use node-ids.
       using_cloud_ids = isinstance(node_set.get('nodes'), int)
@@ -254,6 +259,9 @@ class NodeLayout():
       nodes = [node_hash[ip] if ip in node_hash else \
                Node(ip, using_cloud_ids) for ip in ips_list]
 
+      AppScaleLogger.warn("NODES @1 {}".format(self.print_nodes(nodes)))
+
+
       # Validate volume usage, there should be an equal number of volumes to
       # number of nodes.
       if node_set.get('disks', None):
@@ -266,7 +274,9 @@ class NodeLayout():
         for node, disk in zip(nodes, disks):
           node.disk = disk
 
+      AppScaleLogger.warn("NODE LAYOUT DEFAULT INSTANCE TYPE: {}".format(self.default_instance_type))
       instance_type = node_set.get('instance_type', self.default_instance_type)
+      AppScaleLogger.warn("NODE SET INSTANCE TYPE: {}".format(instance_type))
 
       if not instance_type:
         self.invalid("Must set a default instance type or specify instance "
@@ -294,6 +304,7 @@ class NodeLayout():
         if not node.is_valid():
           self.invalid(",".join(node.errors()))
 
+      AppScaleLogger.warn("NODES @2: {}".format(self.print_nodes(nodes)))
       # All nodes that have the same roles will be expanded the same way,
       # so get the updated list of roles from the first node.
       roles = nodes[0].roles
@@ -318,6 +329,7 @@ class NodeLayout():
     # Distribute unassigned roles and validate that certain roles are filled
     # and return a list of nodes or raise BadConfigurationException.
     nodes = self.distribute_unassigned_roles(node_hash.values(), role_count)
+    AppScaleLogger.warn("NODES @3: {}".format(self.print_nodes(nodes)))
 
     if self.infrastructure in InfrastructureAgentFactory.VALID_AGENTS:
       if not self.min_machines:
@@ -326,7 +338,7 @@ class NodeLayout():
         self.max_machines = len(nodes)
 
     self.nodes = nodes
-
+    AppScaleLogger.warn("NODES @4: {}".format(self.print_nodes(nodes)))
     return True
 
   def validate_disks(self, disks_expected, disks):
@@ -733,7 +745,8 @@ class Node():
       'private_ip': self.private_ip,
       'instance_id': self.instance_id,
       'jobs': self.roles,
-      'disk': self.disk
+      'disk': self.disk,
+      'instance_type' : self.instance_type
     }
 
 
@@ -756,3 +769,4 @@ class Node():
     self.instance_id = node_dict.get('instance_id')
     self.roles = node_dict.get('jobs')
     self.disk = node_dict.get('disk')
+    self.instance_type = node_dict.get('instance_type')

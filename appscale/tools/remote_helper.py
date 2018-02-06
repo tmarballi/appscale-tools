@@ -157,16 +157,22 @@ class RemoteHelper(object):
 
     instance_type_roles = {'with_disks':{}, 'without_disks': {}}
 
+    AppScaleLogger.warn("NODE LAYOUT BEFORE SET DEFAULT: {}".format(node_layout.to_list))
+
     for node in node_layout.get_nodes('load_balancer', True):
       load_balancer_roles.setdefault(node.instance_type, []).append(node)
+      AppScaleLogger.warn("LOAD BALANCER ROLES AFTER SET DEFAULT: {}".format(load_balancer_roles))
 
     for node in node_layout.get_nodes('load_balancer', False):
       instance_type = instance_type_roles['with_disks'] if node.disk else \
         instance_type_roles['without_disks']
+      AppScaleLogger.warn("INSTANCE TYPE BEFORE SET DEFAULT: {}".format(instance_type))
       instance_type.setdefault(node.instance_type, []).append(node)
+      AppScaleLogger.warn("INSTANCE TYPE AFTER SET DEFAULT: {}".format(instance_type))
 
     spawned_instance_ids = []
 
+    AppScaleLogger.warn("LOAD BALANCER ITEMS BEFORE MODIFICATION: {}".format(load_balancer_roles))
     for instance_type, load_balancer_nodes in load_balancer_roles.items():
       # Copy parameters so we can modify the instance type.
       instance_type_params = params.copy()
@@ -185,6 +191,7 @@ class RemoteHelper(object):
         node_layout.nodes[index].private_ip = private_ips[node_index]
         node_layout.nodes[index].instance_id = instance_ids[node_index]
 
+    AppScaleLogger.warn("LOAD BALANCER ITEMS AFTER MODIFICATION: {}".format(load_balancer_roles))
     if options.static_ip:
       node = node_layout.head_node()
       agent.associate_static_ip(params, node.instance_id,
@@ -195,6 +202,7 @@ class RemoteHelper(object):
     AppScaleLogger.log("\nPlease wait for AppScale to prepare your machines "
                        "for use. This can take few minutes.")
 
+    AppScaleLogger.warn("INSTANCE TYPE ROLE ITEMS BEFORE MODIFICATION: {}".format(instance_type_roles))
     for _, nodes in instance_type_roles.items():
       for instance_type, other_nodes in nodes.items():
         if len(other_nodes) <= 0:
@@ -216,6 +224,7 @@ class RemoteHelper(object):
           node_layout.nodes[index].private_ip = _private_ips[node_index]
           node_layout.nodes[index].instance_id = _instance_ids[node_index]
 
+    AppScaleLogger.warn("LOAD BALANCER ITEMS AFTER MODIFICATION: {}".format(instance_type_roles))
     return node_layout
 
   @classmethod
@@ -304,6 +313,8 @@ class RemoteHelper(object):
                            options.verbose)
 
     acc = AppControllerClient(head_node, secret_key)
+    AppScaleLogger.warn('NODE LAYOUT BEFORE SET PARAMETERS {}'.format(node_layout.to_list()))
+    AppScaleLogger.warn('DEPLOYMENT PARMS BEFORE SET PARAMETERS {}'.format(deployment_params))
     try:
       acc.set_parameters(node_layout.to_list(), deployment_params)
     except Exception as exception:

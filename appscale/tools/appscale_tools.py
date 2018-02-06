@@ -759,8 +759,10 @@ class AppScaleTools(object):
     AppScaleLogger.remote_log_tools_state(options, my_id, "started",
       APPSCALE_VERSION)
 
+    AppScaleLogger.warn("OPTIONS BEFORE NODE LAYOUT : {}".format(options))
     node_layout = NodeLayout(options)
 
+    AppScaleLogger.warn("NODE LAYOUT AFTER VALIDATION: {}".format(node_layout.to_list()))
     head_node = node_layout.head_node()
     # Start VMs in cloud via cloud agent.
     if options.infrastructure:
