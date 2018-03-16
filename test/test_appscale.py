@@ -122,10 +122,10 @@ class TestAppScale(unittest.TestCase):
     # mock out the actual writing of the template file
     flexmock(shutil)
     shutil.should_receive('copy').with_args(
-      appscale.TEMPLATE_CLOUD_APPSCALEFILE, '/boo/' + appscale.APPSCALEFILE) \
+      appscale.TEMPLATE_APPSCALEFILE, '/boo/' + appscale.APPSCALEFILE) \
       .and_return()
 
-    appscale.init('cloud')
+    appscale.init()
 
 
   def testInitWithAppScalefile(self):
@@ -139,7 +139,7 @@ class TestAppScale(unittest.TestCase):
     flexmock(os.path)
     os.path.should_receive('exists').with_args('/boo/' + appscale.APPSCALEFILE).and_return(True)
 
-    self.assertRaises(AppScalefileException, appscale.init, 'cloud')
+    self.assertRaises(AppScalefileException, appscale.init)
 
 
   def testUpWithNoAppScalefile(self):
@@ -233,8 +233,8 @@ class TestAppScale(unittest.TestCase):
       'machine' : 'ami-ABCDEFG',
       'keyname' : 'bookey',
       'group' : 'boogroup',
-      'min' : 1,
-      'max' : 1,
+      'min_machines' : 1,
+      'max_machines' : 1,
       'zone' : 'my-zone-1b'
     }
     yaml_dumped_contents = yaml.dump(contents)
@@ -281,8 +281,8 @@ class TestAppScale(unittest.TestCase):
       'instance_type' : 'm3.medium',
       'keyname' : 'bookey',
       'group' : 'boogroup',
-      'min' : 1,
-      'max' : 1,
+      'min_machines' : 1,
+      'max_machines' : 1,
       'EC2_ACCESS_KEY' : 'access key',
       'EC2_SECRET_KEY' : 'secret key',
       'zone' : 'my-zone-1b'
@@ -422,8 +422,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -452,8 +452,8 @@ class TestAppScale(unittest.TestCase):
       'keyname': 'bookey',
       'group': 'boogroup',
       'verbose': True,
-      'min': 1,
-      'max': 1
+      'min_machines': 1,
+      'max_machines': 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -486,8 +486,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -498,6 +498,7 @@ class TestAppScale(unittest.TestCase):
     flexmock(AppScaleTools)
     AppScaleTools.should_receive('upload_app').and_return(
       (fake_host, fake_port))
+    AppScaleTools.should_receive('update_cron')
     AppScaleTools.should_receive('update_queues')
     app = '/bar/app'
     (host, port) = appscale.deploy(app)
@@ -528,8 +529,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -553,8 +554,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1,
+      'min_machines' : 1,
+      'max_machines' : 1,
       'test' : True
     }
     yaml_dumped_contents = yaml.dump(contents)
@@ -566,6 +567,7 @@ class TestAppScale(unittest.TestCase):
     flexmock(AppScaleTools)
     AppScaleTools.should_receive('upload_app').and_return(
       (fake_host, fake_port))
+    AppScaleTools.should_receive('update_cron')
     AppScaleTools.should_receive('update_queues')
     app = '/bar/app'
     (host, port) = appscale.deploy(app)
@@ -701,8 +703,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -735,8 +737,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -769,8 +771,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -803,8 +805,8 @@ class TestAppScale(unittest.TestCase):
       'keyname' : 'bookey',
       'group' : 'boogroup',
       'verbose' : True,
-      'min' : 1,
-      'max' : 1
+      'min_machines' : 1,
+      'max_machines' : 1
     }
     yaml_dumped_contents = yaml.dump(contents)
     self.addMockForAppScalefile(appscale, yaml_dumped_contents)
@@ -827,8 +829,8 @@ class TestAppScale(unittest.TestCase):
       'machine' : 'ami-ABCDEFG',
       'keyname' : 'bookey',
       'group' : 'boogroup',
-      'min' : 1,
-      'max' : 1,
+      'min_machines' : 1,
+      'max_machines' : 1,
       'EC2_ACCESS_KEY' : 'access key',
       'EC2_SECRET_KEY' : 'secret key'
     }

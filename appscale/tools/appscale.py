@@ -48,20 +48,6 @@ class AppScale():
     'templates/AppScalefile')
 
 
-  # The location of the template AppScalefile that should be used when
-  # users execute 'appscale init cloud'.
-  TEMPLATE_CLOUD_APPSCALEFILE = os.path.join(
-    os.path.dirname(sys.modules['appscale.tools'].__file__),
-    'templates/AppScalefile-cloud')
-
-
-  # The location of the template AppScalefile that should be used when
-  # users execute 'appscale init cluster'.
-  TEMPLATE_CLUSTER_APPSCALEFILE = os.path.join(
-    os.path.dirname(sys.modules['appscale.tools'].__file__),
-    'templates/AppScalefile-cluster')
-
-
   APPSCALE_DIRECTORY = os.path.expanduser("~") + os.sep + ".appscale" + os.sep
 
 
@@ -81,10 +67,11 @@ class AppScale():
   USAGE = """Usage: appscale command [<args>]
 
 Available commands:
-  deploy <app>                      Deploys a Google App Engine app to AppScale:
+  deploy [--project <id>] <app>     Deploys a Google App Engine app to AppScale:
                                     <app> can be the top level directory with the
-                                    code or a tar.gz of the source tree.
-  create-user [--admin]             Creates a new user. If --admin option is specified, 
+                                    code or a tar.gz of the source tree, and <id>
+                                    is the application/project name.
+  create-user [--admin]             Creates a new user. If --admin option is specified,
                                     it will create the user as an admin.
   down [--clean][--terminate]       Gracefully terminates the currently
                                     running AppScale deployments. If
@@ -126,18 +113,8 @@ Available commands:
                                     THE APPLICATION WILL BE LOST.
   upgrade                           Upgrades AppScale code to its latest version.
 """
-
-
-  # TODO: update these as items in the AppScalefile get deprecated and removed.
-  DEPRECATED_ASF_ARGS = {
-    'n': 'replication',
-    'scp': 'rsync_source',
-    'appengine': 'default_min_appservers',
-    'max_memory': 'default_max_appserver_memory',
-    'min': 'min_machines',
-    'max': 'max_machines'
-  }
-
+  # Deprecated AppScaleFile arguments
+  DEPRECATED_ASF_ARGS =  ['n', 'scp', 'appengine', 'max_memory', 'min', 'max']
 
   def __init__(self):
     pass
@@ -258,17 +235,8 @@ Available commands:
         " in this directory. Please remove it and run 'appscale init'" +
         " again to generate a new AppScalefile.")
 
-    # next, see if we're making a cloud template file or a cluster
-    # template file
-    if environment == 'cloud':
-      template_file = self.TEMPLATE_CLOUD_APPSCALEFILE
-    elif environment == 'cluster':
-      template_file = self.TEMPLATE_CLUSTER_APPSCALEFILE
-    else:
-      template_file = self.TEMPLATE_APPSCALEFILE
-
     # finally, copy the template AppScalefile there
-    shutil.copy(template_file, appscalefile_location)
+    shutil.copy(self.TEMPLATE_APPSCALEFILE, appscalefile_location)
 
 
   def up(self):
@@ -295,10 +263,9 @@ Available commands:
         os.environ[key] = value
         continue
       if key in self.DEPRECATED_ASF_ARGS:
-        deprecated = True
-        AppScaleLogger.warn("'{}' is deprecated, please use '{}'"\
-                            .format(key, self.DEPRECATED_ASF_ARGS[key]))
-        key = self.DEPRECATED_ASF_ARGS[key]
+        raise AppScalefileException(
+          "'{0}' has been deprecated. Refer to {1} to see the full changes.".
+            format(key, NodeLayout.APPSCALEFILE_INSTRUCTIONS ))
 
       if value is True:
         command.append(str("--%s" % key))
@@ -317,10 +284,6 @@ Available commands:
         else:
           command.append(str("--%s" % key))
           command.append(str("%s" % value))
-
-    if deprecated:
-      AppScaleLogger.warn("Refer to {} to see the full changes.".format(
-        NodeLayout.APPSCALEFILE_INSTRUCTIONS))
 
     run_instances_opts = ParseArgs(command, "appscale-run-instances").args
 
@@ -545,7 +508,7 @@ Available commands:
     AppScaleTools.print_cluster_status(options)
 
 
-  def deploy(self, app, email=None):
+  def deploy(self, app, project_id=None):
     """ 'deploy' is a more accessible way to tell an AppScale deployment to run a
     Google App Engine application than 'appscale-upload-app'. It calls that
     command with the configuration options found in the AppScalefile in the
@@ -554,7 +517,7 @@ Available commands:
     Args:
       app: The path (absolute or relative) to the Google App Engine application
         that should be uploaded.
-      email: The email of user
+      project_id: Which project ID to use to deploy the application.
     Returns:
       A tuple containing the host and port where the application is serving
         traffic from.
@@ -577,17 +540,18 @@ Available commands:
     if 'verbose' in contents_as_yaml and contents_as_yaml['verbose'] == True:
       command.append("--verbose")
 
-    if email is not None:
-      command.append("--email")
-      command.append(email)
-
     command.append("--file")
     command.append(app)
+
+    if project_id is not None:
+      command.append("--project")
+      command.append(project_id)
 
     # Finally, exec the command. Don't worry about validating it -
     # appscale-upload-app will do that for us.
     options = ParseArgs(command, "appscale-upload-app").args
     login_host, http_port = AppScaleTools.upload_app(options)
+    AppScaleTools.update_cron(options.file, options.keyname)
     AppScaleTools.update_queues(options.file, options.keyname)
     return login_host, http_port
 
