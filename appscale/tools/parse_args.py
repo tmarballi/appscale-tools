@@ -499,6 +499,7 @@ class ParseArgs(object):
       self.validate_database_flags()
       self.validate_appengine_flags()
       self.validate_developer_flags()
+      self.validate_instance_type_flag()
     elif function == "appscale-add-keypair":
       self.validate_ips_flags()
     elif function == "appscale-upload-app":
@@ -828,6 +829,18 @@ class ParseArgs(object):
     if self.args.admin_user and self.args.admin_pass and self.args.test:
       raise BadConfigurationException("Cannot set admin_user, " + \
         "admin_pass, and test.")
+
+  def validate_instance_type_flag(self):
+    """
+
+    Raises:
+      BadConfigurationException:
+    """
+    cloud_agent = InfrastructureAgentFactory.create_agent(
+      self.args.infrastructure)
+    params = cloud_agent.get_params_from_args(self.args)
+    if not cloud_agent.is_instance_type_valid(params):
+      raise BadConfigurationException("This instance type is INVALID")
 
 
   def shell_check(self, argument):

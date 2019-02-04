@@ -104,6 +104,10 @@ class AzureAgent(BaseAgent):
                                "Standard_A2", "Standard_D1", "Standard_D1_v2",
                                "Standard_DS1", "Standard_DS1_v2"]
 
+  MINIMUM_CORE_REQ = 8
+
+  MINIMUM_MEM_MB = 4096
+
   # The following constants are string literals that can be used by callers to
   # index into the parameters that the user passes in, as opposed to having to
   # type out the strings each time we need them.
@@ -1906,3 +1910,24 @@ class AzureAgent(BaseAgent):
       if resource_group_name == resource_group.name:
         return True
     return False
+
+  def is_instance_type_valid(self, parameters):
+    """
+      
+    Returns:
+    """
+    credentials = self.open_connection(parameters)
+    subscription_id = str(parameters[self.PARAM_SUBSCRIBER_ID])
+    compute_client = ComputeManagementClient(credentials, subscription_id)
+    region = parameters[self.PARAM_ZONE]
+    instance_type = str(parameters[self.PARAM_INSTANCE_TYPE])
+    vm_sizes_list = compute_client.virtual_machine_sizes.list(location=region)
+    allowed_instance_types = []
+    for vm_size in vm_sizes_list:
+        if vm_size.number_of_cores >= int(self.MINIMUM_CORE_REQ) and vm_size.memory_in_mb >= int(self.MINIMUM_MEM_MB):
+            allowed_instance_types.append(vm_size.name)
+
+    if instance_type in allowed_instance_types:
+        return True
+    return False
+
