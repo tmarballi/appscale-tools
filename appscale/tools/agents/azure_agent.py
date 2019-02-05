@@ -95,14 +95,11 @@ class AzureAgent(BaseAgent):
   # Default resource group name to use for Azure.
   DEFAULT_RESOURCE_GROUP = 'appscalegroup'
 
-  # A list of Azure instance types that have less than 4 GB of RAM, the amount
-  # recommended by Cassandra. AppScale will still run on these instance types,
-  # but is likely to crash after a day or two of use (as Cassandra will attempt
-  # to malloc ~800MB of memory, which will fail on these instance types).
-  DISALLOWED_INSTANCE_TYPES = ["Basic_A0", "Basic_A1", "Basic_A2", "Basic_A3",
-                               "Basic_A4", "Standard_A0", "Standard_A1",
-                               "Standard_A2", "Standard_D1", "Standard_D1_v2",
-                               "Standard_DS1", "Standard_DS1_v2"]
+  # The minimum number of cores required for a valid instance type.
+  MINIMUM_CORE_REQ = 2
+
+  #The minimum memory required (in MB) for a valid instance type.
+  MINIMUM_MEM_MB = 7168
 
   # The following constants are string literals that can be used by callers to
   # index into the parameters that the user passes in, as opposed to having to
@@ -1904,5 +1901,30 @@ class AzureAgent(BaseAgent):
     resource_groups = resource_client.resource_groups.list()
     for resource_group in resource_groups:
       if resource_group_name == resource_group.name:
+        return True
+    return False
+
+  def is_instance_type_valid(self, parameters):
+    """ Checks if the given instance type specifications match the 
+    minimum number of cores and memory (in MB) requirement.
+    Args:
+      parameters: A dict, containing all the parameters necessary to authenticate
+        this user with Azure.
+    Returns:
+      True, if the instance type is valid and matches the requirement.
+      False, otherwise.
+    """
+    credentials = self.open_connection(parameters)
+    subscription_id = str(parameters[self.PARAM_SUBSCRIBER_ID])
+    compute_client = ComputeManagementClient(credentials, subscription_id)
+    region = str(parameters[self.PARAM_ZONE]).replace(" ", "")
+    vm_sizes_list = compute_client.virtual_machine_sizes.list(location=region)
+    allowed_instance_types = []
+    for vm_size in vm_sizes_list:
+        if vm_size.number_of_cores >= int(self.MINIMUM_CORE_REQ) and \
+          vm_size.memory_in_mb >= int(self.MINIMUM_MEM_MB):
+            allowed_instance_types.append(vm_size.name)
+
+    if str(parameters[self.PARAM_INSTANCE_TYPE]) in allowed_instance_types:
         return True
     return False

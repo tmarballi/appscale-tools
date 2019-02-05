@@ -84,34 +84,13 @@ class ParseArgs(object):
     "n1-highmem-8"
   ]
 
-  # A list of instance types we allow users to run AppScale over in Azure.
-  ALLOWED_AZURE_INSTANCE_TYPES = [
-    "Standard_A3", "Standard_A4", "Standard_A5", "Standard_A6", "Standard_A7",
-    "Standard_A8", "Standard_A9", "Standard_A10", "Standard_A11", "Standard_D2",
-    "Standard_D3", "Standard_D4", "Standard_D11", "Standard_D12", "Standard_D13",
-    "Standard_D14", "Standard_D2_v2", "Standard_D3_v2", "Standard_D4_v2",
-    "Standard_D5_v2", "Standard_D11_v2", "Standard_D12_v2", "Standard_D13_v2",
-    "Standard_D14_v2", "Standard_D15_v2", "Standard_DS2", "Standard_DS3",
-    "Standard_DS4", "Standard_DS11", "Standard_DS12", "Standard_DS13",
-    "Standard_DS14", "Standard_DS2_v2", "Standard_DS3_v2", "Standard_DS4_v2",
-    "Standard_DS5_v2", "Standard_DS11_v2", "Standard_DS12_v2", "Standard_DS13_v2",
-    "Standard_DS14_v2", "Standard_DS15_v2", "Standard_F4", "Standard_F8",
-    "Standard_F16", "Standard_F4s", "Standard_F8s", "Standard_F16s",
-    "Standard_G1", "Standard_G2", "Standard_G3", "Standard_G4", "Standard_G5",
-    "Standard_GS1", "Standard_GS2", "Standard_GS3", "Standard_GS4", "Standard_GS5"]
-
   # A combined list of instance types for the different cloud infrastructures.
-  ALLOWED_INSTANCE_TYPES = ALLOWED_EC2_INSTANCE_TYPES + ALLOWED_GCE_INSTANCE_TYPES + \
-                           ALLOWED_AZURE_INSTANCE_TYPES
+  ALLOWED_INSTANCE_TYPES = ALLOWED_EC2_INSTANCE_TYPES + ALLOWED_GCE_INSTANCE_TYPES
 
   # A combined list of instance types for different clouds that have less
   # than 4 GB RAM, the amount recommended for Cassandra.
   DISALLOWED_INSTANCE_TYPES = EC2Agent.DISALLOWED_INSTANCE_TYPES + \
                               GCEAgent.DISALLOWED_INSTANCE_TYPES
-
-  # This check is to avoid import errors whenever Azure agent is not required.
-  if AzureAgent is not None:
-    DISALLOWED_INSTANCE_TYPES += AzureAgent.DISALLOWED_INSTANCE_TYPES
 
   # The default security group to create and use for AppScale cloud deployments.
   DEFAULT_SECURITY_GROUP = "appscale"
@@ -206,7 +185,6 @@ class ParseArgs(object):
       self.parser.add_argument('--machine', '-m',
         help="the ami/emi that has AppScale installed")
       self.parser.add_argument('--instance_type', '-t',
-        choices=self.ALLOWED_INSTANCE_TYPES,
         help="the EC2 instance type to use")
       self.parser.add_argument('--group', '-g', default=keyname,
         help="the security group to use")
@@ -696,7 +674,8 @@ class ParseArgs(object):
         raise BadConfigurationException("--disks must be a dict, but was a " \
           "{0}".format(type(self.args.disks)))
 
-    if self.args.instance_type in self.DISALLOWED_INSTANCE_TYPES and \
+    if self.args.infrastructure != 'azure' and \
+      self.args.instance_type in self.DISALLOWED_INSTANCE_TYPES and \
         not (self.args.force or self.args.test):
       LocalState.confirm_or_abort("The {0} instance type does not have "
         "the suggested 4GB of RAM. Please consider using a larger instance "
@@ -715,6 +694,16 @@ class ParseArgs(object):
       if not self.args.azure_tenant_id:
         raise BadConfigurationException("Cannot authenticate an Azure instance " \
                                         "without the Tenant ID.")
+
+      # In Azure, we can validate the machine instance type specifications against
+      # the minimum cores and memory requirement.
+      cloud_agent = InfrastructureAgentFactory.create_agent(self.args.infrastructure)
+      params = cloud_agent.get_params_from_args(self.args)
+      if not cloud_agent.is_instance_type_valid(params):
+        raise BadConfigurationException("Cannot set instance type {0} as the minimum " \
+          "requirement is {1} cores and {2} MB memory".format(self.args.instance_type,
+            cloud_agent.MINIMUM_CORE_REQ, cloud_agent.MINIMUM_MEM_MB))
+
     elif self.args.infrastructure in ['euca', 'ec2']:
       if not (self.args.EC2_ACCESS_KEY and self.args.EC2_SECRET_KEY):
         raise BadConfigurationException("Both EC2_ACCESS_KEY and "
