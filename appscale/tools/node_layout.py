@@ -146,7 +146,7 @@ class NodeLayout():
       self.login_host = None
 
     self.nodes = []
-    self.validate_node_layout()
+    self.validate_node_layout(options)
 
   def is_cloud_ip(self, ip_address):
     """Parses the given IP address or node ID and returns it and a str
@@ -166,7 +166,7 @@ class NodeLayout():
       self.invalid("IP: {} does not match ip or node-id formats.".format(
         ip_address))
 
-  def validate_node_layout(self):
+  def validate_node_layout(self, options):
     """Checks to see if this NodeLayout represents an acceptable (new) advanced
     deployment strategy, and if so, constructs self.nodes from it.
 
@@ -274,14 +274,28 @@ class NodeLayout():
                        "type per role.")
 
       # Check if this is an allowed instance type.
-      if instance_type in ParseArgs.DISALLOWED_INSTANCE_TYPES and \
-          not (self.force or self.test):
-        reason = "the suggested 4GB of RAM"
-        if 'database' in roles:
-          reason += " to run Cassandra"
-        LocalState.confirm_or_abort("The {0} instance type does not have {1}."
-                                    "Please consider using a larger instance "
-                                    "type.".format(instance_type, reason))
+      if self.infrastructure != 'azure':
+        if instance_type in ParseArgs.DISALLOWED_INSTANCE_TYPES and \
+            not (self.force or self.test):
+          reason = "the suggested 4GB of RAM"
+          if 'database' in roles:
+            reason += " to run Cassandra"
+          LocalState.confirm_or_abort("The {0} instance type does not have {1}."
+                                      "Please consider using a larger instance "
+                                      "type.".format(instance_type, reason))
+      else:
+        # In Azure, we can validate the machine instance type specifications against
+        # the minimum cores and memory requirement.
+        cloud_agent = InfrastructureAgentFactory.create_agent(self.infrastructure)
+        params = cloud_agent.get_params_from_args(options)
+        if not cloud_agent.is_instance_type_valid(params, node_set.get('instance_type')):
+          reason = "the suggested 7GB of RAM"
+          if 'database' in roles:
+            reason += " to run Cassandra"
+          LocalState.confirm_or_abort("The {0} instance type does not have {1}. "
+                                      "Please consider using a larger instance "
+                                      "type.".format(instance_type, reason))
+
       # Assign master.
       if 'master' in roles:
         self.master = nodes[0]
