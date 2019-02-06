@@ -700,9 +700,10 @@ class ParseArgs(object):
       cloud_agent = InfrastructureAgentFactory.create_agent(self.args.infrastructure)
       params = cloud_agent.get_params_from_args(self.args)
       if not cloud_agent.is_instance_type_valid(params):
-        raise BadConfigurationException("Cannot set instance type {0} as the minimum " \
-          "requirement is {1} cores and {2} MB memory".format(self.args.instance_type,
-            cloud_agent.MINIMUM_CORE_REQ, cloud_agent.MINIMUM_MEM_MB))
+        LocalState.confirm_or_abort("The {0} instance type does not have the " \
+          "suggested {1} cores and {2}MB of RAM. Please consider using a larger " \
+          "instance type.".format(self.args.instance_type, cloud_agent.MINIMUM_CORE_REQ,
+                                  cloud_agent.MINIMUM_MEM_MB))
 
     elif self.args.infrastructure in ['euca', 'ec2']:
       if not (self.args.EC2_ACCESS_KEY and self.args.EC2_SECRET_KEY):
