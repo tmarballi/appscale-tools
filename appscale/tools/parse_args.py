@@ -699,7 +699,7 @@ class ParseArgs(object):
       # the minimum cores and memory requirement.
       cloud_agent = InfrastructureAgentFactory.create_agent(self.args.infrastructure)
       params = cloud_agent.get_params_from_args(self.args)
-      if not cloud_agent.is_instance_type_valid(params):
+      if not cloud_agent.is_instance_type_valid(params, self.args.instance_type):
         LocalState.confirm_or_abort("The {0} instance type does not have the " \
           "suggested {1} cores and {2}MB of RAM. Please consider using a larger " \
           "instance type.".format(self.args.instance_type, cloud_agent.MINIMUM_CORE_REQ,

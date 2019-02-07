@@ -1904,12 +1904,14 @@ class AzureAgent(BaseAgent):
         return True
     return False
 
-  def is_instance_type_valid(self, parameters):
+  def is_instance_type_valid(self, parameters, instance_type):
     """ Checks if the given instance type specifications match the 
     minimum number of cores and memory (in MB) requirement.
     Args:
       parameters: A dict, containing all the parameters necessary to authenticate
         this user with Azure.
+      instance_type: The instance type to be checked if belongs to the list of 
+        allowed Azure instance types.
     Returns:
       True, if the instance type is valid and matches the requirement.
       False, otherwise.
@@ -1925,6 +1927,6 @@ class AzureAgent(BaseAgent):
           vm_size.memory_in_mb >= int(self.MINIMUM_MEM_MB):
             allowed_instance_types.append(vm_size.name)
 
-    if str(parameters[self.PARAM_INSTANCE_TYPE]) in allowed_instance_types:
+    if instance_type in allowed_instance_types:
         return True
     return False
