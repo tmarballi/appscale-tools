@@ -129,6 +129,11 @@ class GCEAgent(BaseAgent):
   OAUTH2_STORAGE_LOCATION = '/etc/appscale/oauth2.dat'
   CLIENT_SECRETS_LOCATION = '/etc/appscale/client_secrets.json'
 
+  # The minimum number of cores required for a valid instance type.
+  MINIMUM_CORE_REQ = 2
+
+  # The minimum memory required (in MB) for a valid instance type.
+  MINIMUM_MEM_MB = 7168
 
   def assert_credentials_are_valid(self, parameters):
     """Contacts GCE to see if the given credentials are valid.
@@ -1249,3 +1254,30 @@ class GCEAgent(BaseAgent):
           message = "\n".join([errors['message'] for errors in
             response['error']['errors']])
           raise AgentRuntimeException(str(message))
+
+  def is_instance_type_valid(self, parameters, instance_type):
+    """ Checks if the given instance type specifications match the 
+        minimum number of cores and memory (in MB) requirement.
+    Args:
+      parameters: A dict, containing all the parameters necessary to authenticate
+        this user with Azure.
+      instance_type: The instance type to be checked if belongs to the list of 
+        allowed Azure instance types.
+    Returns:
+      True, if the instance type is valid and matches the requirement.
+      False, otherwise.
+    """
+    gce_service, credentials = self.open_connection(parameters)
+    try:
+      http = httplib2.Http()
+      auth_http = credentials.authorize(http)
+      request = gce_service.machineTypes().get(project=parameters[self.PARAM_PROJECT],
+        zone=parameters[self.PARAM_ZONE], machineType=instance_type)
+      response = request.execute(http=auth_http)
+      if response["guestCpus"] >= int(self.MINIMUM_CORE_REQ) and \
+        response["memoryMb"] >= int(self.MINIMUM_MEM_MB):
+        AppScaleLogger.verbose(str(response), parameters[self.PARAM_VERBOSE])
+        return True
+    except errors.HttpError:
+      return False
+

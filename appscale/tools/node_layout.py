@@ -274,17 +274,8 @@ class NodeLayout():
                        "type per role.")
 
       # Check if this is an allowed instance type.
-      if self.infrastructure != 'azure':
-        if instance_type in ParseArgs.DISALLOWED_INSTANCE_TYPES and \
-            not (self.force or self.test):
-          reason = "the suggested 4GB of RAM"
-          if 'database' in roles:
-            reason += " to run Cassandra"
-          LocalState.confirm_or_abort("The {0} instance type does not have {1}."
-                                      "Please consider using a larger instance "
-                                      "type.".format(instance_type, reason))
-      else:
-        # In Azure, we can validate the machine instance type specifications against
+      if self.infrastructure == 'azure' or self.infrastructure == 'gce':
+        # In Azure and GCE, we can validate the machine instance type specifications against
         # the minimum cores and memory requirement.
         cloud_agent = InfrastructureAgentFactory.create_agent(self.infrastructure)
         params = cloud_agent.get_params_from_args(options)
@@ -293,6 +284,15 @@ class NodeLayout():
           if 'database' in roles:
             reason += " to run Cassandra"
           LocalState.confirm_or_abort("The {0} instance type does not have {1}. "
+                                      "Please consider using a larger instance "
+                                      "type.".format(instance_type, reason))
+      else:
+        if instance_type in ParseArgs.DISALLOWED_INSTANCE_TYPES and \
+            not (self.force or self.test):
+          reason = "the suggested 4GB of RAM"
+          if 'database' in roles:
+            reason += " to run Cassandra"
+          LocalState.confirm_or_abort("The {0} instance type does not have {1}."
                                       "Please consider using a larger instance "
                                       "type.".format(instance_type, reason))
 

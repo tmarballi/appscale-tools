@@ -71,26 +71,12 @@ class ParseArgs(object):
     "hs1.8xlarge",
     ]
 
-  ALLOWED_GCE_INSTANCE_TYPES = [
-    "n1-standard-1",
-    "n1-standard-2",
-    "n1-standard-4",
-    "n1-standard-8",
-    "n1-highcpu-2",
-    "n1-highcpu-4",
-    "n1-highcpu-8",
-    "n1-highmem-2",
-    "n1-highmem-4",
-    "n1-highmem-8"
-  ]
-
   # A combined list of instance types for the different cloud infrastructures.
-  ALLOWED_INSTANCE_TYPES = ALLOWED_EC2_INSTANCE_TYPES + ALLOWED_GCE_INSTANCE_TYPES
+  ALLOWED_INSTANCE_TYPES = ALLOWED_EC2_INSTANCE_TYPES
 
   # A combined list of instance types for different clouds that have less
   # than 4 GB RAM, the amount recommended for Cassandra.
-  DISALLOWED_INSTANCE_TYPES = EC2Agent.DISALLOWED_INSTANCE_TYPES + \
-                              GCEAgent.DISALLOWED_INSTANCE_TYPES
+  DISALLOWED_INSTANCE_TYPES = EC2Agent.DISALLOWED_INSTANCE_TYPES
 
   # The default security group to create and use for AppScale cloud deployments.
   DEFAULT_SECURITY_GROUP = "appscale"
@@ -674,8 +660,7 @@ class ParseArgs(object):
         raise BadConfigurationException("--disks must be a dict, but was a " \
           "{0}".format(type(self.args.disks)))
 
-    if self.args.infrastructure != 'azure' and \
-      self.args.instance_type in self.DISALLOWED_INSTANCE_TYPES and \
+    if self.args.instance_type in self.DISALLOWED_INSTANCE_TYPES and \
         not (self.args.force or self.args.test):
       LocalState.confirm_or_abort("The {0} instance type does not have "
         "the suggested 4GB of RAM. Please consider using a larger instance "
@@ -694,9 +679,14 @@ class ParseArgs(object):
       if not self.args.azure_tenant_id:
         raise BadConfigurationException("Cannot authenticate an Azure instance " \
                                         "without the Tenant ID.")
+    elif self.args.infrastructure in ['euca', 'ec2']:
+      if not (self.args.EC2_ACCESS_KEY and self.args.EC2_SECRET_KEY):
+        raise BadConfigurationException("Both EC2_ACCESS_KEY and "
+                                        "EC2_SECRET_KEY must be specified.")
 
-      # In Azure, we can validate the machine instance type specifications against
-      # the minimum cores and memory requirement.
+    # In Azure and GCE, we can validate the machine instance type specifications against
+    # the minimum cores and memory requirement.
+    if self.args.infrastructure == 'gce' or self.args.infrastructure == 'azure':
       cloud_agent = InfrastructureAgentFactory.create_agent(self.args.infrastructure)
       params = cloud_agent.get_params_from_args(self.args)
       if not cloud_agent.is_instance_type_valid(params, self.args.instance_type):
@@ -704,11 +694,6 @@ class ParseArgs(object):
           "suggested {1} cores and {2}MB of RAM. Please consider using a larger " \
           "instance type.".format(self.args.instance_type, cloud_agent.MINIMUM_CORE_REQ,
                                   cloud_agent.MINIMUM_MEM_MB))
-
-    elif self.args.infrastructure in ['euca', 'ec2']:
-      if not (self.args.EC2_ACCESS_KEY and self.args.EC2_SECRET_KEY):
-        raise BadConfigurationException("Both EC2_ACCESS_KEY and "
-                                        "EC2_SECRET_KEY must be specified.")
 
   def validate_credentials(self):
     """If running over a cloud infrastructure, makes sure that all of the
