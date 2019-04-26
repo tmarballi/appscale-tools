@@ -463,7 +463,8 @@ class AzureAgent(BaseAgent):
                               compute_client.availability_sets.list(resource_group)]
     azure_image_id = parameters[self.PARAM_IMAGE_ID]
     avail_set_sku = None
-    if self.MARKETPLACE_IMAGE.match(azure_image_id):
+    custom_managed_image = compute_client.images.get(resource_group, azure_image_id)
+    if self.MARKETPLACE_IMAGE.match(azure_image_id) or custom_managed_image:
       avail_set_sku = ComputeSku(name='Aligned')
 
     if lb_avail_set_name not in availability_set_names:
@@ -612,6 +613,7 @@ class AzureAgent(BaseAgent):
     plan = None
     virtual_hd = None
 
+    custom_managed_image = compute_client.images.get(resource_group, azure_image_id)
     # Publisher images are formatted Publisher:Offer:Sku:Tag
     if self.MARKETPLACE_IMAGE.match(azure_image_id):
       publisher, offer, sku, version = azure_image_id.split(":")
@@ -624,6 +626,10 @@ class AzureAgent(BaseAgent):
                                  sku=sku,
                                  version=version)
       plan = image.plan
+
+    elif custom_managed_image:
+      image_ref = ImageReference(id=custom_managed_image.id)
+
     else:
       storage_account = parameters[self.PARAM_STORAGE_ACCOUNT]
       virtual_hd = VirtualHardDisk(
@@ -901,6 +907,8 @@ class AzureAgent(BaseAgent):
     plan = None
     image_ref = None
     azure_image_id = parameters[self.PARAM_IMAGE_ID]
+
+    custom_managed_image = compute_client.images.get(resource_group, azure_image_id)
     # Publisher images are formatted Publisher:Offer:Sku:Tag
     if self.MARKETPLACE_IMAGE.match(azure_image_id):
       publisher, offer, sku, version = azure_image_id.split(":")
@@ -913,6 +921,10 @@ class AzureAgent(BaseAgent):
                                  sku=sku,
                                  version=version)
       plan = image.plan
+ 
+    elif custom_managed_image:
+      image_ref = ImageReference(id=custom_managed_image.id)
+
     else:
       image_hd = VirtualHardDisk(uri=azure_image_id)
 
