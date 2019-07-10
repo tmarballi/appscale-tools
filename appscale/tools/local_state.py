@@ -221,7 +221,7 @@ class LocalState(object):
         'update': str(True),
         'update_dir': str(options.update_dir)
       }
-    creds.update(update_dir_creds)
+      creds.update(update_dir_creds)
 
     if options.infrastructure:
       iaas_creds = {
