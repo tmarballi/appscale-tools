@@ -137,6 +137,10 @@ class ParseArgs(object):
   # explicitly provide a value, in megabytes.
   DEFAULT_MAX_APPSERVER_MEMORY = 400
 
+  # The list of code directories to specify which updating the code and building it.
+  ALLOWED_DIR_UPDATES = ["common", "app_controller", "admin_server", "taskqueue",
+                         "app_db", "iaas_manager", "hermes", "api_server",
+                         "appserver_java"]
 
   def __init__(self, argv, function):
     """Creates a new ParseArgs for a set of acceptable flags.
@@ -186,6 +190,7 @@ class ParseArgs(object):
       self.parser.add_argument('--update', action="store_true",
         default=False, help="updates specific code directory and builds it")
       self.parser.add_argument('--update_dir',
+        choices=self.ALLOWED_DIR_UPDATES,
         help="the code directory to update")
       # flags relating to how many VMs we should spawn
       self.parser.add_argument('--min_machines', '--min', type=int,
