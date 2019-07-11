@@ -183,6 +183,10 @@ class ParseArgs(object):
     #TODO: remove arguments in appscale-run-instances that are no longer
     # supported. (min, max, appengine, max_memory, scp)
     if function == "appscale-run-instances":
+      self.parser.add_argument('--update', action="store_true",
+        default=False, help="updates specific code directory and builds it")
+      self.parser.add_argument('--update_dir',
+        help="the code directory to update")
       # flags relating to how many VMs we should spawn
       self.parser.add_argument('--min_machines', '--min', type=int,
         help="the minimum number of VMs to use")
