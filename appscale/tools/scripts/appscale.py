@@ -52,7 +52,6 @@ def main():
         cprint("Usage: appscale up [--update] <code directory to update>", 'red')
         sys.exit(1)
     try:
-      appscale.up()
       appscale.up(update=update_dir)
     except Exception as exception:
       LocalState.generate_crash_log(exception, traceback.format_exc())
