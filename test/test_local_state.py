@@ -199,7 +199,6 @@ class TestLocalState(unittest.TestCase):
       'EC2_URL': '',
       'aws_subnet_id': None,
       'aws_vpc_id': None,
-      'update': ''
     }
     actual = LocalState.generate_deployment_params(options, node_layout,
       {'max_spot_price': '1.23'})
