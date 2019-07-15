@@ -218,8 +218,7 @@ class LocalState(object):
 
     if options.update:
       update_dir_creds = {
-        'update': str(True),
-        'update_dir': str(options.update_dir)
+        'update': str(options.update)
       }
       creds.update(update_dir_creds)
 

@@ -241,14 +241,12 @@ Available commands:
     shutil.copy(self.TEMPLATE_APPSCALEFILE, appscalefile_location)
 
 
-  def up(self, update=False, update_dir=""):
+  def up(self, update=""):
     """ Starts an AppScale deployment with the configuration options from the
     AppScalefile in the current directory.
 
     Args:
-        update: A boolean to indicate whether or not to update and build 
-          appscale code directory.
-        update_dir: A code directory to update and build.
+        update: An appscale code directory to update and build.
     Raises:
       AppScalefileException: If there is no AppScalefile in the current
       directory.
@@ -265,7 +263,6 @@ Available commands:
     command = []
     if update:
         command.append("--update")
-        command.append("--update_dir")
         command.append(str(update_dir))
 
     for key, value in contents_as_yaml.items():
